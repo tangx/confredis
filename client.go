@@ -63,33 +63,35 @@ func (r *Redis) SetDefaults() {
 }
 
 func (r *Redis) initial() *redis.Pool {
-	return &redis.Pool{
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp",
-				fmt.Sprintf("%s:%d", r.Host, r.Port),
-				redis.DialReadTimeout(time.Duration(r.ReadTimeout)),
-				redis.DialConnectTimeout(time.Duration(r.ConnectTimeout)),
-			)
-			if err != nil {
-				logrus.Errorf("redis dial error: %s", err)
+	dialFunc := func() (redis.Conn, error) {
+		c, err := redis.Dial("tcp",
+			fmt.Sprintf("%s:%d", r.Host, r.Port),
+			redis.DialReadTimeout(time.Duration(r.ReadTimeout)),
+			redis.DialConnectTimeout(time.Duration(r.ConnectTimeout)),
+		)
+		if err != nil {
+			logrus.Errorf("redis dial error: %s", err)
+			return nil, err
+		}
+
+		if r.Password != "" {
+			if _, err := c.Do("AUTH", r.Password); err != nil {
+				logrus.Errorf("redis auth error: %s", err)
 				return nil, err
 			}
+		}
 
-			if r.Password != "" {
-				if _, err := c.Do("AUTH", r.Password); err != nil {
-					logrus.Errorf("redis auth error: %s", err)
-					return nil, err
-				}
+		if r.DB != 0 {
+			if _, err := c.Do("SELECT", r.DB); err != nil {
+				logrus.Errorf("redis select db error: %s", err)
+				return nil, err
 			}
+		}
+		return c, nil
+	}
 
-			if r.DB != 0 {
-				if _, err := c.Do("SELECT", r.DB); err != nil {
-					logrus.Errorf("redis select db error: %s", err)
-					return nil, err
-				}
-			}
-			return c, nil
-		},
+	return &redis.Pool{
+		Dial:            dialFunc,
 		MaxIdle:         r.MaxIdle,
 		MaxActive:       r.MaxActive,
 		IdleTimeout:     time.Duration(r.IdleTimeout) * time.Second,
