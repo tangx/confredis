@@ -113,11 +113,12 @@ func (r *Redis) Init() {
 	*/
 
 	mutex.Lock()
+	defer mutex.Unlock()
+
 	r.SetDefaults()
 	if r.pool == nil {
 		r.pool = r.initial()
 	}
-	mutex.Unlock()
 }
 
 func (r *Redis) Get() redis.Conn {
