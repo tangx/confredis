@@ -7,10 +7,10 @@ import (
 func TestMain(t *testing.T) {
 
 	redi := Redis{
-		Host:     "127.0.01",
+		Host:     "127.0.0.1",
 		Port:     6379,
-		Password: "Pass12345",
-		DB:       1,
+		Password: "Pass123452",
+		DB:       99,
 	}
 
 	redi.Init()

@@ -2,6 +2,7 @@ package confredis
 
 import (
 	"fmt"
+
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -70,17 +71,20 @@ func (r *Redis) initial() *redis.Pool {
 				redis.DialConnectTimeout(time.Duration(r.ConnectTimeout)),
 			)
 			if err != nil {
+				logrus.Errorf("redis dial error: %s", err)
 				return nil, err
 			}
 
 			if r.Password != "" {
 				if _, err := c.Do("AUTH", r.Password); err != nil {
+					logrus.Errorf("redis auth error: %s", err)
 					return nil, err
 				}
 			}
 
 			if r.DB != 0 {
 				if _, err := c.Do("SELECT", r.DB); err != nil {
+					logrus.Errorf("redis select db error: %s", err)
 					return nil, err
 				}
 			}
