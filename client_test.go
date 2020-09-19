@@ -4,6 +4,7 @@ import (
 	"sync"
 	"testing"
 
+	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,7 +29,16 @@ func TestMain(t *testing.T) {
 		wg.Wait()
 	}
 
-	// time.Sleep(1 * time.Second)
 	_ = redi.PING()
 
+	t.Run("redis-set", func(t *testing.T) {
+		ok, err := redi.Do("SET", "book", "golang.com")
+		NewWithT(t).Expect(err).Should(BeNil())
+		NewWithT(t).Expect(ok.(string)).Should(Equal("OK"))
+	})
+	t.Run("redis-get", func(t *testing.T) {
+		v, err := redi.Do("GET", "book")
+		NewWithT(t).Expect(err).Should(BeNil())
+		NewWithT(t).Expect(v.([]uint8)).Should(Equal([]uint8("golang.com")))
+	})
 }

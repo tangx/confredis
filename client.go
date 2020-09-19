@@ -129,6 +129,18 @@ func (r *Redis) Get() redis.Conn {
 }
 
 func (r *Redis) PING() error {
+
+	pong, err := r.Do("PING")
+	if err != nil {
+		return err
+	}
+
+	logrus.Debugf("redis conn ping sucess: %s", pong)
+	return nil
+}
+
+func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
+
 	c := r.Get()
 	defer func() {
 		err := c.Close()
@@ -137,11 +149,10 @@ func (r *Redis) PING() error {
 		}
 	}()
 
-	pong, err := c.Do("PING")
-	if err != nil {
-		return err
+	if len(args) == 0 {
+		return c.Do(command)
 	}
 
-	logrus.Debugf("redis conn ping sucess: %s", pong)
-	return nil
+	return c.Do(command, args...)
+
 }
