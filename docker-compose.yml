@@ -1,0 +1,20 @@
+version: '3.1'
+
+services: 
+  redis:
+    restart: always
+    image: bitnami/redis:5.0.8
+    ports:
+      - 6379:6379
+    environment:
+      REDIS_PASSWORD: Pass12345
+    networks:
+      - inner
+
+networks:
+  inner:
+    ipam:
+      driver: default
+      config:
+        - subnet: "169.254.101.0/24"
+
