@@ -2,6 +2,7 @@ package confredis
 
 import (
 	"fmt"
+	"sync"
 
 	"time"
 
@@ -63,6 +64,7 @@ func (r *Redis) SetDefaults() {
 }
 
 func (r *Redis) initial() *redis.Pool {
+
 	dialFunc := func() (redis.Conn, error) {
 		c, err := redis.Dial("tcp",
 			fmt.Sprintf("%s:%d", r.Host, r.Port),
@@ -99,11 +101,23 @@ func (r *Redis) initial() *redis.Pool {
 	}
 }
 
+var (
+	mutex sync.Mutex
+)
+
 func (r *Redis) Init() {
+
+	/*
+		单例模式: 线程安全 , 锁
+		// https://zhuanlan.zhihu.com/p/33102022
+	*/
+
+	mutex.Lock()
 	r.SetDefaults()
 	if r.pool == nil {
 		r.pool = r.initial()
 	}
+	mutex.Unlock()
 }
 
 func (r *Redis) Get() redis.Conn {
